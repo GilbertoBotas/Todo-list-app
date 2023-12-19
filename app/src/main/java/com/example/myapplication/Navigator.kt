@@ -55,7 +55,6 @@ class Navigator(private val tasksManager: TasksManager, private val navControlle
 
     @Composable
     fun Navigation() {
-
         NavHost(navController = navController, startDestination = Screen.MainScreen.route) {
             composable(route = Screen.MainScreen.route) {
                 MainScreen()
