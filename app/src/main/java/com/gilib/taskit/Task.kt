@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.gilib.taskit
 
 data class Task(
     val title: String,

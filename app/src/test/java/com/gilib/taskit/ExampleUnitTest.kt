@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.gilib.taskit
 
 import org.junit.Test
 

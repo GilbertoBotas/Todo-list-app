@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.theme
+package com.gilib.taskit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
