@@ -1,5 +1,6 @@
 package com.gilib.taskit
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,14 +28,18 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -85,6 +90,7 @@ class Navigator(private val tasksManager: TasksManager) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
+    val context = LocalContext.current
     var expanded by remember {
         mutableStateOf(false)
     }
@@ -227,11 +233,12 @@ fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
                                 ),
                                 onClick = {
                                     removing = true
+                                    tasks.get(tasks.indexOf(currentTask)).completed = true
                                     tasks.remove(currentTask)
                                     tasksManager.tasks.remove(currentTask)
                                     tasksManager.saveTasks()
                                     Toast.makeText(
-                                        null,
+                                        context,
                                         "Task Completed! Good Job :D",
                                         Toast.LENGTH_SHORT
                                         ).show()
@@ -413,9 +420,51 @@ fun NewUpdateTaskScreen(tasksManager: TasksManager, navController: NavHostContro
     }
 }
 
+@Composable
+fun HomeScreen() {
+    var selectedIndex by remember {
+        mutableIntStateOf(0)
+    }
+
+    val items = listOf(
+        BottomBarScreen.Starred,
+        BottomBarScreen.Tasks
+    )
+
+    Scaffold (
+        bottomBar = {
+            NavigationBar {
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        selected = (index == selectedIndex),
+                        onClick = {
+                            selectedIndex = index
+                        },
+                        label = {
+                            Text(text = item.title)
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = (
+                                    if (index == selectedIndex)
+                                        item.selectedIcon
+                                    else
+                                        item.unselectedIcon
+                                    ),
+                                contentDescription = item.title )
+                        }
+                    )
+                }
+            }
+        }
+    ) {
+        it.calculateBottomPadding()
+    }
+}
+
 @Preview( showBackground = true )
 @Composable
-fun Preview() {
+private fun Preview() {
     val tasksManager = TasksManager(LocalContext.current)
     val navController = rememberNavController()
     MainScreen(tasksManager , navController)
