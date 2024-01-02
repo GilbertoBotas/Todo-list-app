@@ -1,7 +1,7 @@
 package com.gilib.taskit
 
-import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,11 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,16 +32,18 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -87,23 +93,45 @@ class Navigator(private val tasksManager: TasksManager) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
-    val context = LocalContext.current
+    //Variables for the Sort by dropBoxMenu
     var expanded by remember {
         mutableStateOf(false)
     }
     var sortQuery by remember {
         mutableStateOf("")
     }
-    val tasks = tasksManager.tasks.toMutableStateList()
 
+    //Variables for Tabbed Row
+    var selectedIndex by remember {
+        mutableIntStateOf(1)
+    }
+
+    val items = listOf(
+        TabRowItem.Starred,
+        TabRowItem.Tasks
+    )
+    val pagerState = rememberPagerState {
+        items.size
+    }
+
+    //UX for the Tabbed Row
+    LaunchedEffect(selectedIndex) {
+        pagerState.animateScrollToPage(selectedIndex)
+    }
+    LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+        if(!pagerState.isScrollInProgress)
+            selectedIndex = pagerState.currentPage
+    }
+
+    //Screen Content
     Box {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp, 16.dp, 16.dp, 0.dp),
+                .padding(0.dp, 16.dp, 0.dp, 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -118,6 +146,7 @@ fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
                 modifier = Modifier
+                    .padding(16.dp, 0.dp, 16.dp, 0.dp)
                     .align(Alignment.Start)
                     .clip(RoundedCornerShape(20.dp))
             ) {
@@ -201,79 +230,59 @@ fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
+            TabRow(
+                selectedTabIndex = selectedIndex,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
+                        color = Color(0xFF0073FF)
+                    )
+                },
+                containerColor = Color.Transparent
             ) {
-                items(tasks) { currentTask ->
-                    Card (
+                items.forEachIndexed { index, item ->
+                    Tab(
+                        selected = (index == selectedIndex),
                         onClick = {
-                            navController.navigate(Screen.NewUpdateTaskScreen.route + "/${tasks.indexOf(currentTask)}")
+                            selectedIndex = index
                         },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(70.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFE2E2E2))
-                                .padding(5.dp)
-                        ) {
-                            var removing by remember {
-                                mutableStateOf(false)
-                            }
-                            RadioButton(selected = removing,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = Color(0xFF0073FF),
-                                    unselectedColor = Color(0xFF0073FF)
-                                ),
-                                onClick = {
-                                    removing = true
-                                    tasks.get(tasks.indexOf(currentTask)).completed = true
-                                    tasks.remove(currentTask)
-                                    tasksManager.tasks.remove(currentTask)
-                                    tasksManager.saveTasks()
-                                    Toast.makeText(
-                                        context,
-                                        "Task Completed! Good Job :D",
-                                        Toast.LENGTH_SHORT
-                                        ).show()
-                                    removing = false
-                                }
-                            )
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                            ) {
-                                Text(
-                                    text = currentTask.title,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = Color.Black
-                                )
-                                if (currentTask.description.isNotBlank())
-                                    Text(
-                                        text = currentTask.description,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.Gray,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                            }
-                        }
-                    }
+                        text = {
+                            Text(text = item.title)
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = (
+                                        if (index == selectedIndex)
+                                            item.selectedIcon
+                                        else
+                                            item.unselectedIcon
+                                        ),
+                                contentDescription = item.title )
+                        },
+                        selectedContentColor = Color(0xFF0073FF),
+                        unselectedContentColor = Color(0xFF949393)
+                    )
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(15.dp))
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            ) { index ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    if(index == 0)
+                        Text(text = items[index].title)
+                    else
+                        MyTasks(tasksManager, navController)
                 }
             }
         }
+
         TextButton(
             onClick = {
                 navController.navigate(Screen.NewUpdateTaskScreen.route + "/-1")
@@ -299,8 +308,12 @@ fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
 
 @Composable
 fun NewUpdateTaskScreen(tasksManager: TasksManager, navController: NavHostController, taskId: Int) {
-    val task = if(taskId == -1) Task("", "") else tasksManager.tasks[taskId]
-
+    val task = (
+            if(taskId == -1)
+                Task("", "")
+            else
+                tasksManager.tasks[taskId]
+            )
 
     var title by remember {
         mutableStateOf(task.title)
@@ -420,45 +433,110 @@ fun NewUpdateTaskScreen(tasksManager: TasksManager, navController: NavHostContro
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    var selectedIndex by remember {
-        mutableIntStateOf(0)
-    }
+fun MyTasks(tasksManager: TasksManager, navController: NavHostController) {
+    //Blank Context for Toast
+    val context = LocalContext.current
 
-    val items = listOf(
-        BottomBarScreen.Starred,
-        BottomBarScreen.Tasks
-    )
+    //Tasks List
+    val tasks = tasksManager.tasks.toMutableStateList()
+//    val tasks = mutableListOf(
+//        Task("Bing","Bong", false)
+//    )
 
-    Scaffold (
-        bottomBar = {
-            NavigationBar {
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        selected = (index == selectedIndex),
+    //Variable to control type of task
+//    val starred by remember {
+//        mutableStateOf()
+//    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 16.dp, 16.dp, 0.dp)
+    ) {
+        items(tasks) { currentTask ->
+            Card (
+                onClick = {
+                    navController.navigate(Screen.NewUpdateTaskScreen.route + "/${tasks.indexOf(currentTask)}")
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFFE2E2E2))
+                        .padding(5.dp)
+                ) {
+                    var removing by remember {
+                        mutableStateOf(false)
+                    }
+                    RadioButton(selected = removing,
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = Color(0xFF0073FF),
+                            unselectedColor = Color(0xFF0073FF)
+                        ),
                         onClick = {
-                            selectedIndex = index
-                        },
-                        label = {
-                            Text(text = item.title)
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = (
-                                    if (index == selectedIndex)
-                                        item.selectedIcon
-                                    else
-                                        item.unselectedIcon
-                                    ),
-                                contentDescription = item.title )
+                            removing = true
+                            tasks[tasks.indexOf(currentTask)].completed = true
+                            tasks.remove(currentTask)
+                            tasksManager.tasks.remove(currentTask)
+                            tasksManager.saveTasks()
+                            Toast.makeText(
+                                context,
+                                "Task Completed! Good Job :D",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            removing = false
                         }
+                    )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = currentTask.title,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = Color.Black
+                        )
+                        if (currentTask.description.isNotBlank())
+                            Text(
+                                text = currentTask.description,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Gray,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                    }
+                    var starred by remember {
+                        mutableStateOf(currentTask.completed)
+                    }
+                    Checkbox(
+                        checked = starred,
+                        onCheckedChange = {
+                            starred = !starred
+                            currentTask.completed = starred
+                            tasksManager.tasks[tasks.indexOf(currentTask)].completed = starred
+                            tasksManager.saveTasks()
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF0073FF)
+                        )
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(15.dp))
         }
-    ) {
-        it.calculateBottomPadding()
     }
 }
 
@@ -469,5 +547,3 @@ private fun Preview() {
     val navController = rememberNavController()
     MainScreen(tasksManager , navController)
 }
-
-
