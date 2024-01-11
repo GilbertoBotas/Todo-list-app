@@ -8,8 +8,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+//            val viewModel = ViewModelProvider(this).get(TaskViewModel::class.java)
             val tasksManager = TasksManager(this)
-            Navigator(tasksManager).Navigation()
+            val navigator = Navigator(tasksManager)
+            navigator.Navigation()
         }
     }
 }

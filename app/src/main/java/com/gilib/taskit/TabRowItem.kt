@@ -12,13 +12,13 @@ sealed class TabRowItem(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    object Starred : TabRowItem(
+    data object Starred : TabRowItem(
         title = "Starred",
         selectedIcon = Icons.Filled.Star,
         unselectedIcon = Icons.Outlined.Star
     )
 
-    object Tasks: TabRowItem(
+    data object Tasks: TabRowItem(
         title = "My Tasks",
         selectedIcon = Icons.Filled.List,
         unselectedIcon = Icons.Outlined.List

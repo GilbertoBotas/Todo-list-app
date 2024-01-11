@@ -66,9 +66,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gilib.taskit.data.Task
 
 class Navigator(private val tasksManager: TasksManager) {
-
     @Composable
     fun Navigation() {
         val navController = rememberNavController()
@@ -307,10 +307,14 @@ fun MainScreen(tasksManager: TasksManager, navController: NavHostController) {
 }
 
 @Composable
-fun NewUpdateTaskScreen(tasksManager: TasksManager, navController: NavHostController, taskId: Int) {
+fun NewUpdateTaskScreen(
+    tasksManager: TasksManager,
+    navController: NavHostController,
+    taskId: Int
+) {
     val task = (
             if(taskId == -1)
-                Task("", "")
+                Task(title = "", description = "")
             else
                 tasksManager.tasks[taskId]
             )
@@ -341,10 +345,12 @@ fun NewUpdateTaskScreen(tasksManager: TasksManager, navController: NavHostContro
             TextButton(
                 onClick = {
                     if (title.isNotBlank()) {
-                        if(taskId == -1)
-                            tasksManager.tasks.add(0, Task(title, description))
+                        if(taskId == -1) {
+                            tasksManager.tasks.add(0, Task(title = title, description = description))
+//                            mTaskViewModel.addTask(Task( title = title, description = description))
+                        }
                         else
-                            tasksManager.tasks[taskId] = Task(title, description)
+                            tasksManager.tasks[taskId] = Task(title = title, description = description)
 
                         tasksManager.saveTasks()
                         navController.popBackStack()
