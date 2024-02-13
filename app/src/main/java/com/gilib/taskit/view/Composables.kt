@@ -17,6 +17,8 @@ import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,9 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gilib.taskit.R
 import com.gilib.taskit.model.Task
+import com.gilib.taskit.ui.theme.TaskItTheme
 
 @Composable
 fun AppBarView(
@@ -65,7 +69,12 @@ fun AppBarView(
 }
 
 @Composable
-fun TaskItem(task: Task, onEditClick: () -> Unit, onStarredClicked: () -> Unit) {
+fun TaskItem(
+    task: Task,
+    onEditClick: () -> Unit,
+    onStarredClicked: () -> Unit,
+    onDeleteClicked: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,24 +88,35 @@ fun TaskItem(task: Task, onEditClick: () -> Unit, onStarredClicked: () -> Unit) 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = task.title,
-                    fontWeight = FontWeight.ExtraBold,
-                    maxLines = 1
-                )
-                Text(
-                    text = task.description,
-                    maxLines = 1
-                )
-            }
+            RadioButton(
+                selected = false,
+                onClick = { onDeleteClicked() }
+            )
 
-            TaskCheckBox(modifier = Modifier.padding(8.dp), checked = task.starred) {
-                onStarredClicked()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = task.title,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = task.description,
+                        maxLines = 1
+                    )
+                }
+
+                TaskCheckBox(modifier = Modifier.padding(8.dp), checked = task.starred) {
+                    onStarredClicked()
+                }
             }
         }
     }
@@ -116,4 +136,19 @@ fun TaskCheckBox(
             .size(30.dp)
             .clickable { onCheckedChange() }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewL() {
+    TaskItTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            TaskItem(
+                task = Task(title = "Title", description = "Description"),
+                onEditClick = { },
+                onDeleteClicked = { },
+                onStarredClicked = { }
+            )
+        }
+    }
 }

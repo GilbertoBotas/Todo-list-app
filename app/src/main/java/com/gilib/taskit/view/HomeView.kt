@@ -155,7 +155,7 @@ fun HomeView(
 fun Preview() {
     TaskItTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            TaskItem(task = Task(1,"test", "description"), {}, {})
+            TaskItem(task = Task(1,"test", "description"), {}, {}, {})
         }
     }
 }
