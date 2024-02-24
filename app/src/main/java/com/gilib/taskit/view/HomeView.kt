@@ -22,6 +22,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -58,7 +59,7 @@ fun HomeView(
     }
 
     Scaffold (
-        topBar = { AppBarView(title = "TaskIt") },
+        topBar = { AppBarView(title = "TaskIt", viewModel = viewModel) },
         floatingActionButton = {
             FloatingActionButton(
                 modifier = Modifier.padding(all = 20.dp),
@@ -124,28 +125,36 @@ fun HomeView(
                     verticalArrangement = Arrangement.Top
                 ){
                     if(index == 0) {
-                        ListTasksView(
-                            starred = true,
-                            viewModel = viewModel,
-                            navController = navController)
+                        if(viewModel.listState.value.starredList.collectAsState(initial = listOf()).value.isNotEmpty()) {
+                            ListTasksView(
+                                starred = true,
+                                viewModel = viewModel,
+                                navController = navController
+                            )
+                        } else {
+                            NoTasksView(starred = true)
+                        }
                     } else {
-                        ListTasksView(
-                            modifier = Modifier.weight(2f),
-                            starred = false,
-                            viewModel = viewModel,
-                            navController = navController
-                        )
-                        ListCompletedTasks(
-                            modifier = Modifier.weight(1f),
-                            viewModel = viewModel
-                        )
+                        if(viewModel.listState.value.taskList.collectAsState(initial = listOf()).value.isNotEmpty()) {
+                            ListTasksView(
+                                modifier = Modifier.weight(2f),
+                                starred = false,
+                                viewModel = viewModel,
+                                navController = navController
+                            )
+                            if (viewModel.listState.value.completedList.collectAsState(initial = listOf()).value.isNotEmpty()) {
+                                ListCompletedTasks(
+                                    modifier = Modifier.weight(1f),
+                                    viewModel = viewModel
+                                )
+                            }
+                        } else {
+                            NoTasksView(starred = false)
+                        }
                     }
                 }
-
             }
-
         }
-
     }
 }
 

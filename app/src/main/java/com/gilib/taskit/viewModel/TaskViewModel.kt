@@ -1,5 +1,6 @@
 package com.gilib.taskit.viewModel
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,12 @@ import kotlinx.coroutines.launch
 class TaskViewModel(
     private val tasksRepository: TasksRepository = Graph.tasksRepository
 ): ViewModel() {
+
+    data class ListState(
+        val taskList: Flow<List<Task>>,
+        val starredList: Flow<List<Task>>,
+        val completedList: Flow<List<Task>>
+    )
 
     var selectedTaskTabState by mutableIntStateOf(1)
     var taskTitleState by mutableStateOf("")
@@ -34,15 +41,57 @@ class TaskViewModel(
         taskDescriptionState = description
     }
 
-    lateinit var getAllTasks: Flow<List<Task>>
-    lateinit var getStarredTasks: Flow<List<Task>>
-    lateinit var getCompletedTasks: Flow<List<Task>>
+    lateinit var listState: MutableState<ListState>
 
     init {
         viewModelScope.launch {
-            getAllTasks = tasksRepository.getAllTasks()
-            getStarredTasks = tasksRepository.getStarredTasks()
-            getCompletedTasks = tasksRepository.getCompletedTasks()
+            listState = mutableStateOf(
+                    ListState(
+                    taskList = tasksRepository.getNewestTasks(),
+                    starredList = tasksRepository.getNewestStarredTasks(),
+                    completedList = tasksRepository.getCompletedTasks()
+                )
+            )
+        }
+    }
+
+    private fun updateListState(taskList: Flow<List<Task>>, starredList: Flow<List<Task>>) {
+        listState.value = listState.value.copy(taskList = taskList, starredList = starredList)
+    }
+
+    fun newest() {
+        viewModelScope.launch {
+            updateListState(
+                taskList = tasksRepository.getNewestTasks(),
+                starredList = tasksRepository.getNewestStarredTasks()
+            )
+        }
+    }
+
+    fun oldest() {
+        viewModelScope.launch {
+            updateListState(
+                taskList = tasksRepository.getOldestTasks(),
+                starredList = tasksRepository.getOldestStarredTasks()
+            )
+        }
+    }
+
+    fun titleAZ() {
+        viewModelScope.launch {
+            updateListState(
+                taskList = tasksRepository.getAZTasks(),
+                starredList = tasksRepository.getAZStarredTasks()
+            )
+        }
+    }
+
+    fun titleZA() {
+        viewModelScope.launch {
+            updateListState(
+                taskList = tasksRepository.getZATasks(),
+                starredList = tasksRepository.getZAStarredTasks()
+            )
         }
     }
 
@@ -61,4 +110,5 @@ class TaskViewModel(
     fun getTask(id: Long): Flow<Task> {
         return tasksRepository.getTask(id)
     }
+
 }

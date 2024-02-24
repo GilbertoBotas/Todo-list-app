@@ -7,7 +7,7 @@ object Graph {
     private lateinit var database: TaskDatabase
 
     val tasksRepository by lazy {
-        OfflineTasksRepository(database.taskDao())
+        TasksRepository(database.taskDao())
     }
 
     fun provide(context: Context) {

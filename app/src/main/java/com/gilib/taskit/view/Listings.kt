@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -44,7 +43,6 @@ import com.gilib.taskit.model.Task
 import com.gilib.taskit.ui.theme.TaskItTheme
 import com.gilib.taskit.viewModel.TaskViewModel
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ListTasksView(
     modifier: Modifier = Modifier,
@@ -56,14 +54,14 @@ fun ListTasksView(
     val context = LocalContext.current
 
     val taskList = if(starred)
-        viewModel.getStarredTasks.collectAsState(initial = listOf())
+        viewModel.listState.value.starredList.collectAsState(initial = listOf())
     else
-        viewModel.getAllTasks.collectAsState(initial = listOf())
+        viewModel.listState.value.taskList.collectAsState(initial = listOf())
 
     LazyColumn (
         modifier = modifier
     ) {
-        items(taskList.value, key = { task -> task.id }) { task ->
+        items(taskList.value) { task ->
             TaskItem(
                 task = task,
                 onEditClick = {
@@ -132,7 +130,7 @@ fun ListCompletedTasks(
         }
 
         if(expanded) {
-            val list = viewModel.getCompletedTasks.collectAsState(initial = listOf())
+            val list = viewModel.listState.value.completedList.collectAsState(initial = listOf())
 
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(list.value) { task ->
